@@ -697,8 +697,8 @@ jq_iterate(Jconn * conn, ForeignScanState * node, List * retrieved_attrs, int re
 			values = (char **) palloc0(tupleDescriptor->natts * sizeof(char *));
 			foreach(lc, retrieved_attrs)
 			{
-				void *attr = (void *) lfirst(lc);
-				int			column_index = attr->int_value - 1;
+				int *attr = (int *) lfirst(lc);
+				int			column_index = (*attr) - 1;
 				Oid			pgtype = TupleDescAttr(tupleDescriptor, column_index)->atttypid;
 				int32		pgtypmod = TupleDescAttr(tupleDescriptor, column_index)->atttypmod;
 				jobject		obj = (jobject) (*Jenv)->GetObjectArrayElement(Jenv, rowArray, i);
