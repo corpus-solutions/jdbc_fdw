@@ -123,7 +123,7 @@ jdbc_fdw_validator(PG_FUNCTION_ARGS)
 			bool		is_parsed;
 
 			value = defGetString(def);
-			is_parsed = parse_real(value, &real_val, 0, NULL);
+			is_parsed = parse_real(value, &real_val);
 
 			if (!is_parsed)
 				ereport(ERROR,
