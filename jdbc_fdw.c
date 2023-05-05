@@ -27,7 +27,6 @@
 #include "nodes/makefuncs.h"
 #include "nodes/nodeFuncs.h"
 #include "optimizer/cost.h"
-#include "optimizer/appendinfo.h"
 #include "optimizer/pathnode.h"
 #include "optimizer/paths.h"
 #include "optimizer/planmain.h"
@@ -43,6 +42,10 @@
 #include "utils/elog.h"
 #include "executor/spi.h"
 
+#if PG_VERSION_NUM < 120000
+#else
+#include "optimizer/appendinfo.h"
+#endif
 
 #include "storage/ipc.h"
 #include "catalog/pg_foreign_server.h"
