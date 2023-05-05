@@ -651,6 +651,7 @@ jq_iterate(Jconn * conn, ForeignScanState * node, List * retrieved_attrs, int re
 	char	  **values;
 	int			numberOfColumns;
 	int			i;
+	ListCell    *lc;
 
 	ereport(DEBUG3, (errmsg("In jq_iterate")));
 
@@ -694,9 +695,10 @@ jq_iterate(Jconn * conn, ForeignScanState * node, List * retrieved_attrs, int re
 		if(retrieved_attrs != NIL){
 
 			values = (char **) palloc0(tupleDescriptor->natts * sizeof(char *));
-			for (i = 0; i < retrieved_attrs->length; i++)
+			foreach(lc, retrieved_attrs)
 			{
-				int			column_index = retrieved_attrs->elements[i].int_value - 1;
+				void *attr = (void *) lfirst(lc);
+				int			column_index = attr.int_value - 1;
 				Oid			pgtype = TupleDescAttr(tupleDescriptor, column_index)->atttypid;
 				int32		pgtypmod = TupleDescAttr(tupleDescriptor, column_index)->atttypmod;
 				jobject		obj = (jobject) (*Jenv)->GetObjectArrayElement(Jenv, rowArray, i);
