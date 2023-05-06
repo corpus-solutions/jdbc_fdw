@@ -409,6 +409,22 @@ jdbc_fdw_version(PG_FUNCTION_ARGS)
 	PG_RETURN_INT32(CODE_VERSION);
 }
 
+jdbc_exec_cleanup(Jconn	*conn, Jresult *volatile res, int resultSetID)
+{
+	if (res)
+		jq_clear(res);
+
+	if (resultSetID != 0)
+		jq_release_resultset_id(conn, resultSetID);
+
+	tuplestore_donestoring((ReturnSetInfo *) fcinfo->resultinfo->setResult);
+
+	if (conn)
+	{
+		jdbc_release_connection(conn);
+	}
+}
+
 Datum
 jdbc_exec(PG_FUNCTION_ARGS)
 {
@@ -455,24 +471,15 @@ jdbc_exec(PG_FUNCTION_ARGS)
 
 		jq_iterate_all_row(fcinfo, conn, tupleDescriptor, resultSetID);
 	}
-	PG_FINALLY();
+	PG_CATCH();
 	{
-		if (res)
-			jq_clear(res);
-
-		if (resultSetID != 0)
-			jq_release_resultset_id(conn, resultSetID);
-
-		tuplestore_donestoring((ReturnSetInfo *) fcinfo->resultinfo->setResult);
-
-		if (conn)
-		{
-			jdbc_release_connection(conn);
-			conn = NULL;
-		}
+		jdbc_exec_cleanup(conn, res, resultSetID);
+		conn = NULL;
+		PG_RE_THROW();
 	}
 	PG_END_TRY();
-
+	jdbc_exec_cleanup(conn, res, resultSetID);
+	conn = NULL;
 	return (Datum) 0;
 }
 
