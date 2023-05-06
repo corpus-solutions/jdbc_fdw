@@ -7,9 +7,9 @@ PG_CPPFLAGS = -I$(libpq_srcdir)
 SHLIB_LINK = $(libpq)
 
 EXTENSION = jdbc_fdw
-DATA = jdbc_fdw--1.0.sql jdbc_fdw--1.0--1.1.sql
+DATA = jdbc_fdw--1.0.sql jdbc_fdw--1.0--1.1.sql jdbc_fdw--1.2.sql
 
-REGRESS = postgresql/jdbc_fdw postgresql/int4 postgresql/int8 postgresql/float4 postgresql/float8 postgresql/select postgresql/insert postgresql/update postgresql/aggregates 
+REGRESS = postgresql/jdbc_fdw postgresql/int4 postgresql/int8 postgresql/float4 postgresql/float8 postgresql/select postgresql/insert postgresql/update postgresql/aggregates
 
 JDBC_CONFIG = jdbc_config
 
@@ -24,7 +24,7 @@ TRGTS = JAVAFILES
 JAVA_SOURCES = \
 	JDBCUtils.java \
 	JDBCDriverLoader.java \
- 
+
 PG_CPPFLAGS=-D'PKG_LIB_DIR=$(pkglibdir)' -I$(libpq_srcdir)
 
 JFLAGS = -d $(pkglibdir)
