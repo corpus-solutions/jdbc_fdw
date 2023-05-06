@@ -405,17 +405,23 @@ jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * us
 	if (JDBCUtilsClass == NULL)
 	{
 		ereport(ERROR, (errmsg("Failed to find the JDBCUtils class!")));
+	} else {
+		ereport(DEBUG3, (errmsg("Found JDBCUtils class")));
 	}
 	idCreate = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "createConnection",
 									"(I[Ljava/lang/String;)V");
 	if (idCreate == NULL)
 	{
 		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.createConnection method!")));
+	} else {
+		ereport(DEBUG3, (errmsg("Found JDBCUtils.createConnection method")));
 	}
 	idGetIdentifierQuoteString = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "getIdentifierQuoteString", "()Ljava/lang/String;");
 	if (idGetIdentifierQuoteString == NULL)
 	{
 		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.getIdentifierQuoteString method")));
+	} else {
+		ereport(DEBUG3, (errmsg("Found JDBCUtils.getIdentifierQuoteString method")));
 	}
 
 	/*
@@ -441,6 +447,8 @@ jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * us
 			(*Jenv)->DeleteLocalRef(Jenv, stringArray[i]);
 		}
 		ereport(ERROR, (errmsg("Failed to create argument array")));
+	} else {
+		ereport(DEBUG3, (errmsg("Created argument array.")));
 	}
 	for (i = 1; i < numParams; i++)
 	{
@@ -1411,8 +1419,8 @@ jq_get_exception()
 		exceptionMsg = (jstring) (*Jenv)->CallObjectMethod(Jenv, exc, exceptionMsgID);
 		exceptionString = jdbc_convert_string_to_cstring((jobject) exceptionMsg);
 		err_msg = pstrdup(exceptionString);
-		ereport(ERROR, (errmsg("remote server returned an error")));
 		ereport(DEBUG3, (errmsg("%s", err_msg)));
+		ereport(ERROR, (errmsg("remote server returned an error")));
 	}
 	return;
 }
