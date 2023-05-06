@@ -10,6 +10,7 @@
  */
 #include "postgres.h"
 #include "jdbc_fdw.h"
+#include "access/htup_details.h"
 #include "catalog/pg_foreign_server.h"
 #include "catalog/pg_foreign_table.h"
 #include "catalog/pg_user_mapping.h"
