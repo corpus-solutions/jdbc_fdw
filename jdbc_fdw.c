@@ -409,6 +409,7 @@ jdbc_fdw_version(PG_FUNCTION_ARGS)
 	PG_RETURN_INT32(CODE_VERSION);
 }
 
+void
 jdbc_exec_cleanup(Jconn	*conn, Jresult *volatile res, int resultSetID)
 {
 	if (res)
