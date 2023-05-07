@@ -631,6 +631,8 @@ jq_release_resultset_id(Jconn * conn, int resultSetID)
 
 	jq_get_JDBCUtils(conn, &JDBCUtilsClass, &JDBCUtilsObject);
 
+	ereport(DEBUG3, (errmsg("Found JDBCUtils instance")));
+
 	idClearResultSetID = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "clearResultSetID",
 											  "(I)V");
 	if (idClearResultSetID == NULL)
