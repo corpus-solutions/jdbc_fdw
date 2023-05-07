@@ -636,6 +636,8 @@ jq_release_resultset_id(Jconn * conn, int resultSetID)
 	if (idClearResultSetID == NULL)
 	{
 		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.clearResultSetID method!")));
+	} else {
+		ereport(DEBUG3, (errmsg("Found JDBCUtils.clearResultSetID method")));
 	}
 	jq_exception_clear();
 	(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idClearResultSetID, resultSetID);
