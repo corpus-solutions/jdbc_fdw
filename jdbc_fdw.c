@@ -415,7 +415,7 @@ jdbc_exec_cleanup(Jconn	*conn, Jresult *volatile res, int resultSetID)
 	if (res)
 		jq_clear(res);
 
-	if (resultSetID != 0)
+	if (resultSetID != 0 && conn)
 		jq_release_resultset_id(conn, resultSetID);
 
 	tuplestore_donestoring((ReturnSetInfo *) fcinfo->resultinfo->setResult);
