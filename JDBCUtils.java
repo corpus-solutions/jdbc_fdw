@@ -315,10 +315,11 @@ public class JDBCUtils {
       {
         /* Column's index start from 1, so param of getColumnTypeName is (i + 1)  */
         int columnType = resultSetMetaData.getColumnType(i + 1);
+		String typeName = resultSetMetaData.getColumnTypeName(i + 1);
         switch (columnType) {
           case Types.ARRAY:
             /* Array get from postgres server e.g interger[], bool[],... */
-            tmpColumnTypesList[i] = tmpResultSet.getString("TYPE_NAME");
+            tmpColumnTypesList[i] = typeName;
             break;
           case Types.BIGINT:
             tmpColumnTypesList[i] = "BIGINT";
@@ -369,7 +370,7 @@ public class JDBCUtils {
           case Types.OTHER:
           {
             /* get type name from remote server */
-            switch (tmpResultSet.getString("TYPE_NAME")) {
+            switch (typeName) {
               /*mapping type for gridDB*/
               case "BOOL_ARRAY":
                 tmpColumnTypesList[i] = "BOOL[]";
@@ -398,13 +399,13 @@ public class JDBCUtils {
                 tmpColumnTypesList[i] = "TIMESTAMPTZ[]";
                 break;
               default:
-                tmpColumnTypesList[i] = tmpResultSet.getString("TYPE_NAME");
+                tmpColumnTypesList[i] = typeName;
                 break;
             }
             break;
           }
           default:
-            tmpColumnTypesList[i] = tmpResultSet.getString("TYPE_NAME");
+            tmpColumnTypesList[i] = typeName;
             break;
         }
       }
