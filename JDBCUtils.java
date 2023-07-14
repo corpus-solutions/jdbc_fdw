@@ -441,11 +441,11 @@ public class JDBCUtils {
    * getTableNames
    *      Returns the column name
    */
-  public String[] getTableNames() throws SQLException {
+  public String[] getTableNames(String schemaName) throws SQLException {
     try {
       checkConnExist();
       DatabaseMetaData md = conn.getMetaData();
-      ResultSet tmpResultSet = md.getTables(null, null, "%", null);
+      ResultSet tmpResultSet = md.getTables(null, schemaName, "%", null);
 
       List<String> tmpTableNamesList = new ArrayList<String>();
       while (tmpResultSet.next()) {

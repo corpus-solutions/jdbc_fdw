@@ -3025,6 +3025,7 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 	bool		first_column;
 
 	elog(DEBUG1, "jdbc_fdw : %s", __func__);
+	remote_schema = ;
 
 	/* Parse statement options */
 	foreach(lc, stmt->options)
@@ -3043,7 +3044,7 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 	user = GetUserMapping(GetUserId(), server->serverid);
 	conn = jdbc_get_connection(server, user, false);
 
-	schema_list = jq_get_schema_info(conn);
+	schema_list = jq_get_schema_info(conn, stmt->remote_schema);
 	if (schema_list != NIL)
 	{
 		initStringInfo(&buf);

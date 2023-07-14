@@ -125,7 +125,7 @@ void		jq_get_exception(void);
  * get table infomations for importForeignSchema
  */
 static List * jq_get_column_infos(Jconn * conn, char *tablename);
-static List * jq_get_table_names(Jconn * conn);
+static List * jq_get_table_names(Jconn * conn, char *remote_schema);
 
 
 static void jq_get_JDBCUtils(Jconn *conn, jclass *JDBCUtilsClass, jobject *JDBCUtilsObject);
@@ -1701,7 +1701,7 @@ jq_get_column_infos_without_key(Jconn * conn, int *resultSetID, int *column_num)
  * jq_get_table_names
  */
 static List *
-jq_get_table_names(Jconn * conn)
+jq_get_table_names(Jconn * conn, char *remote_schema)
 {
 	jobject		JDBCUtilsObject;
 	jclass		JDBCUtilsClass;
@@ -1710,18 +1710,21 @@ jq_get_table_names(Jconn * conn)
 	List	   *tableName = NIL;
 	jsize		numberOfTables;
 	int			i;
+	jstring		jschemaname = (*Jenv)->NewStringUTF(Jenv, remote_schema);
 
 	jq_get_JDBCUtils(conn, &JDBCUtilsClass, &JDBCUtilsObject);
 
 	jdbc_sig_int_interrupt_check_process();
-	idGetTableNames = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "getTableNames", "()[Ljava/lang/String;");
+	idGetTableNames = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "getTableNames", "(Ljava/lang/String;)[Ljava/lang/String;");
 	if (idGetTableNames == NULL)
 	{
+		(*Jenv)->DeleteLocalRef(Jenv, jschemaname);
 		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.getTableNames method")));
 	}
 	jq_exception_clear();
-	tableNameArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idGetTableNames);
+	tableNameArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idGetTableNames, jschemaname);
 	jq_get_exception();
+	(*Jenv)->DeleteLocalRef(Jenv, jschemaname);
 	if (tableNameArray != NULL)
 	{
 		numberOfTables = (*Jenv)->GetArrayLength(Jenv, tableNameArray);
@@ -1740,14 +1743,14 @@ jq_get_table_names(Jconn * conn)
  * jq_get_schema_info
  */
 List *
-jq_get_schema_info(Jconn * conn)
+jq_get_schema_info(Jconn * conn, char *remote_schema)
 {
 	List	   *schema_list = NIL;
 	List	   *tableName = NIL;
 	JtableInfo *tableInfo;
 	ListCell   *lc;
 
-	tableName = jq_get_table_names(conn);
+	tableName = jq_get_table_names(conn, remote_schema);
 
 	foreach(lc, tableName)
 	{
