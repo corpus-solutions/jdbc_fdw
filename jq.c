@@ -664,7 +664,9 @@ jq_iterate(Jconn * conn, ForeignScanState * node, List * retrieved_attrs, int re
 	char	  **values;
 	int			numberOfColumns;
 	int			i;
+	int         j;
 	ListCell    *lc;
+	jobject		obj;
 
 	ereport(DEBUG3, (errmsg("In jq_iterate")));
 
@@ -706,21 +708,25 @@ jq_iterate(Jconn * conn, ForeignScanState * node, List * retrieved_attrs, int re
 	if (rowArray != NULL)
 	{
 		if(retrieved_attrs != NIL){
-
 			values = (char **) palloc0(tupleDescriptor->natts * sizeof(char *));
+			j = 0;
 			foreach(lc, retrieved_attrs)
 			{
-				int *attr = (int *) lfirst(lc);
-				int			column_index = (*attr) - 1;
-				Oid			pgtype = TupleDescAttr(tupleDescriptor, column_index)->atttypid;
-				int32		pgtypmod = TupleDescAttr(tupleDescriptor, column_index)->atttypmod;
-				jobject		obj = (jobject) (*Jenv)->GetObjectArrayElement(Jenv, rowArray, i);
+				i = lfirst_int(lc);
+				if (i > 0) {
+					int			column_index = i - 1;
+					Oid			pgtype = TupleDescAttr(tupleDescriptor, column_index)->atttypid;
+					int32		pgtypmod = TupleDescAttr(tupleDescriptor, column_index)->atttypmod;
+					obj = (jobject) (*Jenv)->GetObjectArrayElement(Jenv, rowArray, j);
+				}
 
 				if (obj != NULL)
 				{
 					tupleSlot->tts_isnull[column_index] = false;
 					tupleSlot->tts_values[column_index] = jdbc_convert_object_to_datum(pgtype, pgtypmod, obj);
 				}
+
+				j += 1;
 			}
 		}else{
 			jsize size = (*Jenv)->GetArrayLength(Jenv, rowArray);
