@@ -3091,7 +3091,7 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 				if (columnInfo->primary_key)
 					appendStringInfoString(&buf, " OPTIONS (key 'true')");
 			}
-			appendStringInfo(&buf, ") SERVER %s;", quote_identifier(server->servername));
+			appendStringInfo(&buf, ") SERVER %s OPTIONS (schema_name '%s');", quote_identifier(server->servername), stmt->remote_schema);
 			commands = lappend(commands, pstrdup(buf.data));
 	NEXT_COLUMN:
 			resetStringInfo(&buf);
