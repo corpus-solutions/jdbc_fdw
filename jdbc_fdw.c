@@ -3025,7 +3025,6 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 	bool		first_column;
 
 	elog(DEBUG1, "jdbc_fdw : %s", __func__);
-	remote_schema = ;
 
 	/* Parse statement options */
 	foreach(lc, stmt->options)
