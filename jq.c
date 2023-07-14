@@ -666,7 +666,6 @@ jq_iterate(Jconn * conn, ForeignScanState * node, List * retrieved_attrs, int re
 	int			i;
 	int         j;
 	ListCell    *lc;
-	jobject		obj;
 
 	ereport(DEBUG3, (errmsg("In jq_iterate")));
 
@@ -713,10 +712,15 @@ jq_iterate(Jconn * conn, ForeignScanState * node, List * retrieved_attrs, int re
 			foreach(lc, retrieved_attrs)
 			{
 				i = lfirst_int(lc);
+				Oid			pgtype;
+				int32		pgtypmod;
+				jobject		obj;
+				int			column_index;
+
 				if (i > 0) {
-					int			column_index = i - 1;
-					Oid			pgtype = TupleDescAttr(tupleDescriptor, column_index)->atttypid;
-					int32		pgtypmod = TupleDescAttr(tupleDescriptor, column_index)->atttypmod;
+					column_index = i - 1;
+					pgtype = TupleDescAttr(tupleDescriptor, column_index)->atttypid;
+					pgtypmod = TupleDescAttr(tupleDescriptor, column_index)->atttypmod;
 					obj = (jobject) (*Jenv)->GetObjectArrayElement(Jenv, rowArray, j);
 				}
 
