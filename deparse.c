@@ -1480,7 +1480,7 @@ jdbc_build_tlist_to_deparse(RelOptInfo *foreignrel)
 	return tlist;
 }
 
-const char * jdbc_quote_identifier(const char *ident, char *q_char)
+const char * jdbc_deparse_quote_identifier(const char *ident, char *q_char)
 {
 	return jdbc_quote_identifier(ident, q_char, QUOTE_ALL_IDENTIFIERS);
 }

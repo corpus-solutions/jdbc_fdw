@@ -177,6 +177,6 @@ extern void jdbc_deparse_delete_sql(StringInfo buf, PlannerInfo *root,
 extern void jdbc_deparse_analyze_sql(StringInfo buf, Relation rel,
 									 List **retrieved_attrs, char *q_char);
 extern List *jdbc_build_tlist_to_deparse(RelOptInfo *foreignrel);
-extern const char * jdbc_quote_identifier(const char *ident, char *q_char);
+extern const char * jdbc_deparse_quote_identifier(const char *ident, char *q_char);
 
 #endif							/* jdbc_fdw_H */
