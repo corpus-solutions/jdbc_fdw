@@ -3077,7 +3077,7 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 				}
 			}
 			if(!excluded) {
-				char	   *table_name_quoted = jdbc_quote_identifier(tmpTableInfo->table_name, conn->q_char, QUOTE_ALL_IDENTIFIERS);
+				char	   *table_name_quoted = jdbc_quote_identifier(tmpTableInfo->table_name, conn->q_char);
 				resetStringInfo(&buf);
 				if (recreate)
 				{
@@ -3111,7 +3111,7 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 					}
 					/* Print column name and type */
 					appendStringInfo(&buf, "%s %s",
-									 jdbc_quote_identifier(columnInfo->column_name, conn->q_char, QUOTE_ALL_IDENTIFIERS),
+									 jdbc_quote_identifier(columnInfo->column_name, conn->q_char),
 									 columnInfo->column_type);
 					/* Add option if the column is rowkey. */
 					if (columnInfo->primary_key)
