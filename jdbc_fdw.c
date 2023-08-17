@@ -3077,17 +3077,18 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 				}
 			}
 			if(!excluded) {
+				char	   *table_name_quoted = jdbc_quote_identifier(tmpTableInfo->table_name, conn->q_char, QUOTE_ALL_IDENTIFIERS);
 				resetStringInfo(&buf);
 				if (recreate)
 				{
-					appendStringInfo(&buf, "DROP FOREIGN TABLE IF EXISTS %s", tmpTableInfo->table_name);
+					appendStringInfo(&buf, "DROP FOREIGN TABLE IF EXISTS %s", table_name_quoted);
 					commands_drop = lappend(commands_drop, pstrdup(buf.data));
 					resetStringInfo(&buf);
-					appendStringInfo(&buf, "CREATE FOREIGN TABLE %s(", tmpTableInfo->table_name);
+					appendStringInfo(&buf, "CREATE FOREIGN TABLE %s(", table_name_quoted);
 				}
 				else
 				{
-					appendStringInfo(&buf, "CREATE FOREIGN TABLE IF NOT EXISTS %s(", tmpTableInfo->table_name);
+					appendStringInfo(&buf, "CREATE FOREIGN TABLE IF NOT EXISTS %s(", table_name_quoted);
 				}
 				first_column = true;
 				foreach(column_lc, tmpTableInfo->column_info)
@@ -3110,7 +3111,7 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 					}
 					/* Print column name and type */
 					appendStringInfo(&buf, "%s %s",
-									 columnInfo->column_name,
+									 jdbc_quote_identifier(columnInfo->column_name, conn->q_char, QUOTE_ALL_IDENTIFIERS),
 									 columnInfo->column_type);
 					/* Add option if the column is rowkey. */
 					if (columnInfo->primary_key)
