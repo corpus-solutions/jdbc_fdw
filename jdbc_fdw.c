@@ -3020,9 +3020,11 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 	StringInfoData buf;
 	ListCell   *lc;
 	ListCell   *table_lc;
+	RangeVar   *table_rangevar;
 	ListCell   *column_lc;
 	List	   *schema_list = NIL;
 	bool		first_column;
+	bool		excluded = false;
 
 	elog(DEBUG1, "jdbc_fdw : %s", __func__);
 
@@ -3051,50 +3053,74 @@ jdbcImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 		foreach(table_lc, schema_list)
 		{
 			JtableInfo *tmpTableInfo = (JtableInfo *) lfirst(table_lc);
-
-			resetStringInfo(&buf);
-			if (recreate)
-			{
-				appendStringInfo(&buf, "DROP FOREIGN TABLE IF EXISTS %s", tmpTableInfo->table_name);
-				commands_drop = lappend(commands_drop, pstrdup(buf.data));
+			excluded = false;
+			/* Handle tables excluded by an EXCEPT clause */
+			if (stmt->list_type == FDW_IMPORT_SCHEMA_EXCEPT) {
+				foreach(lc,  stmt->table_list) {
+					table_rangevar = (RangeVar*)lfirst(lc);
+					if (strcmp(tmpTableInfo->table_name, table_rangevar->relname) == 0)
+					{
+						excluded = true;
+						break;
+					}
+				}
+			}
+			if (stmt->list_type == FDW_IMPORT_SCHEMA_LIMIT_TO ) {
+				excluded = true;
+				foreach(lc,  stmt->table_list) {
+					table_rangevar = (RangeVar*)lfirst(lc);
+					if (strcmp(tmpTableInfo->table_name, table_rangevar->relname) == 0)
+					{
+						excluded = false;
+						break;
+					}
+				}
+			}
+			if(!excluded) {
 				resetStringInfo(&buf);
-				appendStringInfo(&buf, "CREATE FOREIGN TABLE %s(", tmpTableInfo->table_name);
-			}
-			else
-			{
-				appendStringInfo(&buf, "CREATE FOREIGN TABLE IF NOT EXISTS %s(", tmpTableInfo->table_name);
-			}
-			first_column = true;
-			foreach(column_lc, tmpTableInfo->column_info)
-			{
-				JcolumnInfo *columnInfo = (JcolumnInfo *) lfirst(column_lc);
-
-				/* add ',' between columns */
-				if (first_column)
+				if (recreate)
 				{
-					first_column = false;
+					appendStringInfo(&buf, "DROP FOREIGN TABLE IF EXISTS %s", tmpTableInfo->table_name);
+					commands_drop = lappend(commands_drop, pstrdup(buf.data));
+					resetStringInfo(&buf);
+					appendStringInfo(&buf, "CREATE FOREIGN TABLE %s(", tmpTableInfo->table_name);
 				}
 				else
 				{
-					appendStringInfoString(&buf, ", ");
+					appendStringInfo(&buf, "CREATE FOREIGN TABLE IF NOT EXISTS %s(", tmpTableInfo->table_name);
 				}
-				if (!strcmp(columnInfo->column_type, "UNKNOWN"))
+				first_column = true;
+				foreach(column_lc, tmpTableInfo->column_info)
 				{
-					elog(WARNING, "table: %s has unrecognizable column type for JDBC; skipping", tmpTableInfo->table_name);
-					goto NEXT_COLUMN;
+					JcolumnInfo *columnInfo = (JcolumnInfo *) lfirst(column_lc);
+
+					/* add ',' between columns */
+					if (first_column)
+					{
+						first_column = false;
+					}
+					else
+					{
+						appendStringInfoString(&buf, ", ");
+					}
+					if (!strcmp(columnInfo->column_type, "UNKNOWN"))
+					{
+						elog(WARNING, "table: %s has unrecognizable column type for JDBC; skipping", tmpTableInfo->table_name);
+						goto NEXT_COLUMN;
+					}
+					/* Print column name and type */
+					appendStringInfo(&buf, "%s %s",
+									 columnInfo->column_name,
+									 columnInfo->column_type);
+					/* Add option if the column is rowkey. */
+					if (columnInfo->primary_key)
+						appendStringInfoString(&buf, " OPTIONS (key 'true')");
 				}
-				/* Print column name and type */
-				appendStringInfo(&buf, "%s %s",
-								 columnInfo->column_name,
-								 columnInfo->column_type);
-				/* Add option if the column is rowkey. */
-				if (columnInfo->primary_key)
-					appendStringInfoString(&buf, " OPTIONS (key 'true')");
+				appendStringInfo(&buf, ") SERVER %s OPTIONS (schema_name '%s');", quote_identifier(server->servername), stmt->remote_schema);
+				commands = lappend(commands, pstrdup(buf.data));
+		NEXT_COLUMN:
+				resetStringInfo(&buf);
 			}
-			appendStringInfo(&buf, ") SERVER %s OPTIONS (schema_name '%s');", quote_identifier(server->servername), stmt->remote_schema);
-			commands = lappend(commands, pstrdup(buf.data));
-	NEXT_COLUMN:
-			resetStringInfo(&buf);
 		}
 		if (recreate)
 		{
