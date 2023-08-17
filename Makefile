@@ -25,7 +25,10 @@ JAVA_SOURCES = \
 	JDBCUtils.java \
 	JDBCDriverLoader.java \
 
+QUOTE_ALL_IDENTIFIERS ?= false
+
 PG_CPPFLAGS=-D'PKG_LIB_DIR=$(pkglibdir)' -I$(libpq_srcdir)
+PG_CFLAGS += -D'QUOTE_ALL_IDENTIFIERS=$(QUOTE_ALL_IDENTIFIERS)'
 
 JFLAGS = -d $(pkglibdir)
 

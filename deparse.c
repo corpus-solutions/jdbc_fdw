@@ -62,7 +62,9 @@
 #include "utils/typcache.h"
 #include "optimizer/tlist.h"
 
-
+#ifndef QUOTE_ALL_IDENTIFIERS
+#define QUOTE_ALL_IDENTIFIERS	false
+#endif
 /*
  * Global context for jdbc_foreign_expr_walker's search of an expression
  * tree.
@@ -1372,7 +1374,7 @@ jdbc_deparse_analyze_sql(StringInfo buf, Relation rel, List **retrieved_attrs, c
 			}
 		}
 
-		appendStringInfoString(buf, jdbc_quote_identifier(colname, q_char, false));
+		appendStringInfoString(buf, jdbc_quote_identifier(colname, q_char, QUOTE_ALL_IDENTIFIERS));
 
 		*retrieved_attrs = lappend_int(*retrieved_attrs, i + 1);
 	}
@@ -1434,7 +1436,7 @@ jdbc_deparse_column_ref(StringInfo buf, int varno, int varattno, PlannerInfo *ro
 		colname = get_relid_attribute_name(rte->relid, varattno);
 #endif
 
-	appendStringInfoString(buf, jdbc_quote_identifier(colname, q_char, false));
+	appendStringInfoString(buf, jdbc_quote_identifier(colname, q_char, QUOTE_ALL_IDENTIFIERS));
 }
 
 /*
@@ -1587,16 +1589,16 @@ jdbc_deparse_relation(StringInfo buf, Relation rel, char *q_char)
 
 	if (nspname == NULL)
 	{
-		appendStringInfo(buf, "%s", jdbc_quote_identifier(relname, q_char, false));
+		appendStringInfo(buf, "%s", jdbc_quote_identifier(relname, q_char, QUOTE_ALL_IDENTIFIERS));
 	}
 	else if (strlen(nspname) == 0)
 	{
-		appendStringInfo(buf, "%s", jdbc_quote_identifier(relname, q_char, false));
+		appendStringInfo(buf, "%s", jdbc_quote_identifier(relname, q_char, QUOTE_ALL_IDENTIFIERS));
 	}
 	else
 	{
-		appendStringInfo(buf, "%s.%s", jdbc_quote_identifier(nspname, q_char, false),
-						 jdbc_quote_identifier(relname, q_char, false));
+		appendStringInfo(buf, "%s.%s", jdbc_quote_identifier(nspname, q_char, QUOTE_ALL_IDENTIFIERS),
+						 jdbc_quote_identifier(relname, q_char, QUOTE_ALL_IDENTIFIERS));
 	}
 
 }
@@ -1912,12 +1914,12 @@ jdbc_deparse_func_expr(FuncExpr *node, deparse_expr_cxt *context)
 		const char *schemaname;
 
 		schemaname = get_namespace_name(procform->pronamespace);
-		appendStringInfo(buf, "%s.", jdbc_quote_identifier(schemaname, q_char, false));
+		appendStringInfo(buf, "%s.", jdbc_quote_identifier(schemaname, q_char, QUOTE_ALL_IDENTIFIERS));
 	}
 
 	/* Deparse the function name ... */
 	proname = NameStr(procform->proname);
-	appendStringInfo(buf, "%s(", jdbc_quote_identifier(proname, q_char, false));
+	appendStringInfo(buf, "%s(", jdbc_quote_identifier(proname, q_char, QUOTE_ALL_IDENTIFIERS));
 	/* ... and all the arguments */
 	first = true;
 	foreach(arg, node->args)
@@ -2370,7 +2372,7 @@ jdbc_append_function_name(Oid funcid, deparse_expr_cxt *context)
 
 	/* Always print the function name */
 	proname = NameStr(procform->proname);
-	appendStringInfoString(buf, jdbc_quote_identifier(proname, q_char, false));
+	appendStringInfoString(buf, jdbc_quote_identifier(proname, q_char, QUOTE_ALL_IDENTIFIERS));
 
 	ReleaseSysCache(proctup);
 }
