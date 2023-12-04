@@ -637,9 +637,11 @@ jdbcGetForeignRelSize(PlannerInfo *root,
 		if (strcmp(def->defname, "use_remote_estimate") == 0)
 			fpinfo->use_remote_estimate = defGetBoolean(def);
 		else if (strcmp(def->defname, "fdw_startup_cost") == 0)
-			(void) parse_real(defGetString(def), &fpinfo->fdw_startup_cost);
+			(void) parse_real(defGetString(def), &fpinfo->fdw_startup_cost, 0,
+							  NULL);
 		else if (strcmp(def->defname, "fdw_tuple_cost") == 0)
-			(void) parse_real(defGetString(def), &fpinfo->fdw_tuple_cost);
+			(void) parse_real(defGetString(def), &fpinfo->fdw_tuple_cost, 0,
+							  NULL);
 	}
 	foreach(lc, fpinfo->table->options)
 	{
