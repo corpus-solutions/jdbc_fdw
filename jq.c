@@ -8,6 +8,7 @@
  *
  * ---------------------------------------------
  */
+#include <stdlib.h>
 #include "postgres.h"
 #include "jdbc_fdw.h"
 #include "access/htup_details.h"
@@ -38,14 +39,20 @@
 /* POSTGRES_TO_UNIX_EPOCH_DAYS to microseconds */
 #define POSTGRES_TO_UNIX_EPOCH_USECS 		(POSTGRES_TO_UNIX_EPOCH_DAYS * USECS_PER_DAY)
 
+#ifdef _WIN32
+#define PATH_SEPARATOR ";"
+#else
+#define PATH_SEPARATOR ":"
+#endif
+
 /*
  * Local housekeeping functions and Java objects
  */
 
-static JNIEnv * Jenv;
+static __thread JNIEnv * Jenv = NULL;
 static JavaVM * jvm;
 jobject		java_call;
-static bool InterruptFlag;		/* Used for checking for SIGINT interrupt */
+static volatile bool InterruptFlag;		/* Used for checking for SIGINT interrupt */
 
 /*
  * Describes the valid options for objects that use this wrapper.
@@ -75,7 +82,7 @@ static JserverOptions opts;
 
 /* Local function prototypes */
 static int	jdbc_connect_db_complete(Jconn * conn);
-static void jdbc_jvm_init(const ForeignServer * server, const UserMapping * user);
+void jdbc_jvm_init(const ForeignServer * server, const UserMapping * user);
 static void jdbc_get_server_options(JserverOptions * opts, const ForeignServer * f_server, const UserMapping * f_mapping);
 static Jconn * jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * user);
 /*
@@ -309,8 +316,14 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 
 	if (FunctionCallCheck == false)
 	{
-		classpath = (char *) palloc0(strlen(strpkglibdir) + 19);
-		snprintf(classpath, strlen(strpkglibdir) + 19, "-Djava.class.path=%s", strpkglibdir);
+		const char* env_classpath = getenv("CLASSPATH");
+
+		if (env_classpath != NULL) {
+			classpath = psprintf("-Djava.class.path=%s" PATH_SEPARATOR "%s", strpkglibdir, env_classpath);
+		} else {
+			classpath = psprintf("-Djava.class.path=%s", strpkglibdir);
+		}
+
 
 		if (opts.maxheapsize != 0)
 		{						/* If the user has given a value for setting
@@ -340,7 +353,7 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 					(errmsg("Failed to create Java VM")
 					 ));
 		}
-		ereport(DEBUG3, (errmsg("Successfully created a JVM with %d MB heapsize", opts.maxheapsize)));
+		ereport(DEBUG3, (errmsg("Successfully created a JVM with %d MB heapsize and classpath set to '%s'", opts.maxheapsize, classpath)));
 		InterruptFlag = false;
 		/* Register an on_proc_exit handler that shuts down the JVM. */
 		on_proc_exit(jdbc_destroy_jvm, 0);

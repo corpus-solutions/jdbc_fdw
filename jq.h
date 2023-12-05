@@ -79,4 +79,5 @@ extern List * jq_get_column_infos_without_key(Jconn * conn, int *resultSetID, in
 extern void *jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, int resultSetID);
 extern Datum jdbc_convert_to_pg(Oid pgtyp, int pgtypmod, char *value);
 extern List * jq_get_schema_info(Jconn * conn, char *remote_schema);
+extern void jdbc_jvm_init(const ForeignServer * server, const UserMapping * user);
 #endif							/* JQ_H */
