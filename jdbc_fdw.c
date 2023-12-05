@@ -553,7 +553,7 @@ jdbc_create_descriptor(Jconn *conn, int *resultSetID)
 
 	column_info_list = jq_get_column_infos_without_key(conn, resultSetID, &column_num);
 
-	desc = CreateTemplateTupleDesc(column_num, 0);
+	desc = CreateTemplateTupleDesc(column_num);
 	foreach(column_lc, column_info_list)
 	{
 		JcolumnInfo *column_info = (JcolumnInfo *) lfirst(column_lc);
