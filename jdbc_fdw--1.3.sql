@@ -7,6 +7,11 @@ CREATE OR REPLACE FUNCTION jdbc_fdw_version()
 RETURNS pg_catalog.int4 STRICT
 AS 'MODULE_PATHNAME' LANGUAGE C;
 
+CREATE FUNCTION jdbc_exec (text, text)
+RETURNS setof record
+AS 'MODULE_PATHNAME','jdbc_exec'
+LANGUAGE C STRICT PARALLEL RESTRICTED;
+
 CREATE FUNCTION jdbc_exec (text, text, VARIADIC "any")
 RETURNS setof record
 AS 'MODULE_PATHNAME','jdbc_exec'
