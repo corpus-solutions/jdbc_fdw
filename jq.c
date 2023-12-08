@@ -607,7 +607,7 @@ jq_prepare_id(Jconn * conn, const char *query, int *resultSetID)
 											   "(Ljava/lang/String;)I");
 	if (idCreateStatementID == NULL)
 	{
-		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.createStatementID method!")));
+		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.createPreparedStatement method!")));
 	}
 	/* The query argument */
 	statement = (*Jenv)->NewStringUTF(Jenv, query);
@@ -649,7 +649,7 @@ jq_prepare_exec_id(Jconn * conn, const char *query, int *resultSetID)
 											   "(Ljava/lang/String;)I");
 	if (idCreateStatementID == NULL)
 	{
-		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.createStatementID method!")));
+		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.createAndExecStatementID method!")));
 	}
 	/* The query argument */
 	statement = (*Jenv)->NewStringUTF(Jenv, query);
@@ -693,7 +693,7 @@ jq_exec_id(Jconn * conn, int *resultSetID)
 											   "(I;)I");
 	if (idexecuteQueryStatementID == NULL)
 	{
-		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.createStatementID method!")));
+		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.executeQueryStatementID method!")));
 	}
 	jq_exception_clear();
 	*resultSetID = (int) (*Jenv)->CallIntMethod(Jenv, conn->JDBCUtilsObject, idexecuteQueryStatementID, *resultSetID);
