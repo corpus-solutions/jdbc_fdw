@@ -678,7 +678,6 @@ Jresult *
 jq_exec_id(Jconn * conn, int *resultSetID)
 {
 	jmethodID	idexecuteQueryStatementID;
-	jstring		statement;
 	jclass		JDBCUtilsClass;
 	jobject		JDBCUtilsObject;
 	Jresult    *res;
@@ -701,14 +700,9 @@ jq_exec_id(Jconn * conn, int *resultSetID)
 	jq_get_exception();
 	if (*resultSetID < 0)
 	{
-		/* Return Java memory */
-		(*Jenv)->DeleteLocalRef(Jenv, statement);
 		ereport(ERROR, (errmsg("Get resultSetID failed with code: %d", *resultSetID)));
 	}
 	ereport(DEBUG3, (errmsg("Get resultSetID successfully, ID: %d", *resultSetID)));
-
-	/* Return Java memory */
-	(*Jenv)->DeleteLocalRef(Jenv, statement);
 	*res = PGRES_COMMAND_OK;
 	return res;
 }
