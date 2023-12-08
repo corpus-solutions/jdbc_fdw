@@ -468,7 +468,7 @@ jdbc_exec(PG_FUNCTION_ARGS)
 
 		if (PG_NARGS() > 2)
 		{
-			for(int i = 2; i < PG_NARGS; i++) {
+			for(int i = 2; i < PG_NARGS(); i++) {
 				 Oid element_type = get_fn_expr_argtype(fcinfo->flinfo, i);
 				 if (!OidIsValid(element_type))
 						elog(ERROR, errmsg("could not determine data type of input at position %d", i));
