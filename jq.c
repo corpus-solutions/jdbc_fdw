@@ -1339,6 +1339,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 		case JSONOID:
 		case NAMEOID:
 		case UNKNOWNOID:
+		case 3802: //JSONB
 			{
 				/* Bind as text */
 				char	   *outputString = NULL;
