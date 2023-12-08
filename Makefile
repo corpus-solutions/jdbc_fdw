@@ -7,7 +7,7 @@ PG_CPPFLAGS = -I$(libpq_srcdir)
 SHLIB_LINK = $(libpq)
 
 EXTENSION = jdbc_fdw
-DATA = jdbc_fdw--1.0.sql jdbc_fdw--1.0--1.1.sql jdbc_fdw--1.2.sql
+DATA = jdbc_fdw--1.0.sql jdbc_fdw--1.0--1.1.sql jdbc_fdw--1.2.sql jdbc_fdw--1.2--1.3.sql jdbc_fdw--1.3.sql
 
 REGRESS = postgresql/jdbc_fdw postgresql/int4 postgresql/int8 postgresql/float4 postgresql/float8 postgresql/select postgresql/insert postgresql/update postgresql/aggregates
 
