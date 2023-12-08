@@ -175,7 +175,7 @@ public class JDBCUtils {
 	  info.setNumberOfColumns(tmpNumberOfColumns);
 	  info.setNumberOfAffectedRows(tmpNumberOfAffectedRows);
 	  info.setResultSet(tmpResultSet);
-      return tmpResultSetKey;
+      return resultSetID;
     } catch (Throwable e) {
       throw e;
     }
