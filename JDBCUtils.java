@@ -166,10 +166,9 @@ public class JDBCUtils {
 	  ResultSetInfo info = resultSetInfoMap.get(resultSetID);
       PreparedStatement tmpPstmt = info.getPstmt();
       checkPstmt(tmpPstmt);
-      tmpPstmt.clearParameters();
       info.setPstmt(tmpPstmt);
-
 	  tmpResultSet = tmpPstmt.executeQuery();
+	  tmpPstmt.clearParameters();
       rSetMetadata = tmpResultSet.getMetaData();
       tmpNumberOfColumns = rSetMetadata.getColumnCount();
 	  info.setNumberOfColumns(tmpNumberOfColumns);
