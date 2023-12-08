@@ -690,7 +690,7 @@ jq_exec_id(Jconn * conn, int *resultSetID)
 	*res = PGRES_FATAL_ERROR;
 
 	idexecuteQueryStatementID = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "executeQueryStatementID",
-											   "(I;)I");
+											   "(I)I");
 	if (idexecuteQueryStatementID == NULL)
 	{
 		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.executeQueryStatementID method!")));
