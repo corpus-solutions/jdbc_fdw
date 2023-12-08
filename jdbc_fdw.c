@@ -466,7 +466,7 @@ jdbc_exec(PG_FUNCTION_ARGS)
 		if (*res != PGRES_COMMAND_OK)
 			jdbc_fdw_report_error(ERROR, res, conn, false, sql);
 
-		if(if (PG_NARGS() > 2)
+		if (PG_NARGS() > 2)
 		{
 			for(int i = 2; i < PG_NARGS; i++) {
 				 Oid element_type = get_fn_expr_argtype(fcinfo->flinfo, i);
