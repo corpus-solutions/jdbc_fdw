@@ -1301,7 +1301,7 @@ jdbcBeginForeignScan(ForeignScanState *node, int eflags)
 		fsstate->param_values = (const char **) palloc0(numParams * sizeof(char *));
 	else
 		fsstate->param_values = NULL;
-	(void) jq_exec_id(fsstate->conn, fsstate->query, &fsstate->resultSetID);
+	(void) jq_prepare_exec_id(fsstate->conn, fsstate->query, &fsstate->resultSetID);
 }
 
 /*
@@ -1333,7 +1333,7 @@ jdbcReScanForeignScan(ForeignScanState *node)
 	if (!fsstate->cursor_exists || !fsstate->resultSetID > 0)
 		return;
 
-	(void) jq_exec_id(fsstate->conn, fsstate->query, &fsstate->resultSetID);
+	(void) jq_prepare_exec_id(fsstate->conn, fsstate->query, &fsstate->resultSetID);
 
 	/* Now force a fresh FETCH. */
 	fsstate->tuples = NULL;

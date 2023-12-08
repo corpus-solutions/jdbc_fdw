@@ -630,6 +630,51 @@ jq_prepare_id(Jconn * conn, const char *query, int *resultSetID)
 }
 
 Jresult *
+jq_exec_id(Jconn * conn, const char *query, int *resultSetID)
+{
+	jmethodID	idCreateStatementID;
+	jstring		statement;
+	jclass		JDBCUtilsClass;
+	jobject		JDBCUtilsObject;
+	Jresult    *res;
+
+	ereport(DEBUG3, (errmsg("In jq_exec_id(%p): %s", conn, query)));
+
+	jq_get_JDBCUtils(conn, &JDBCUtilsClass, &JDBCUtilsObject);
+
+	res = (Jresult *) palloc0(sizeof(Jresult));
+	*res = PGRES_FATAL_ERROR;
+
+	idCreateStatementID = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "createAndExecStatementID",
+											   "(Ljava/lang/String;)I");
+	if (idCreateStatementID == NULL)
+	{
+		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.createStatementID method!")));
+	}
+	/* The query argument */
+	statement = (*Jenv)->NewStringUTF(Jenv, query);
+	if (statement == NULL)
+	{
+		ereport(ERROR, (errmsg("Failed to create query argument")));
+	}
+	jq_exception_clear();
+	*resultSetID = (int) (*Jenv)->CallIntMethod(Jenv, conn->JDBCUtilsObject, idCreateStatementID, statement);
+	jq_get_exception();
+	if (*resultSetID < 0)
+	{
+		/* Return Java memory */
+		(*Jenv)->DeleteLocalRef(Jenv, statement);
+		ereport(ERROR, (errmsg("Get resultSetID failed with code: %d", *resultSetID)));
+	}
+	ereport(DEBUG3, (errmsg("Get resultSetID successfully, ID: %d", *resultSetID)));
+
+	/* Return Java memory */
+	(*Jenv)->DeleteLocalRef(Jenv, statement);
+	*res = PGRES_COMMAND_OK;
+	return res;
+}
+
+Jresult *
 jq_exec_id(Jconn * conn, int *resultSetID)
 {
 	jmethodID	idexecuteQueryStatementID;

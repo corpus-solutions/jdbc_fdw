@@ -116,6 +116,39 @@ public class JDBCUtils {
   }
 
   /*
+   * createAndExecStatementID
+   *      Create a statement object based on the query
+   *      with a specific resultID and return back to the calling C function
+   *      Returns:
+   *          resultID on success
+   */
+  public int createAndExecStatementID(String query) throws Exception {
+    ResultSet tmpResultSet;
+    int tmpNumberOfColumns;
+    int tmpNumberOfAffectedRows = 0;
+    ResultSetMetaData rSetMetadata;
+    int tmpResultSetKey;
+    try {
+      checkConnExist();
+      tmpStmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+      if (queryTimeoutValue != 0) {
+        tmpStmt.setQueryTimeout(queryTimeoutValue);
+      }
+      tmpResultSet = tmpStmt.executeQuery(query);
+      rSetMetadata = tmpResultSet.getMetaData();
+      tmpNumberOfColumns = rSetMetadata.getColumnCount();
+      tmpResultSetKey = initResultSetKey();
+      resultSetInfoMap.put(
+          tmpResultSetKey,
+          new ResultSetInfo(
+              tmpResultSet, tmpNumberOfColumns, tmpNumberOfAffectedRows, null));
+      return tmpResultSetKey;
+    } catch (Throwable e) {
+      throw e;
+    }
+  }
+
+  /*
    * executeQueryStatementID
    *      Create a statement object based on the query
    *      with a specific resultID and return back to the calling C function

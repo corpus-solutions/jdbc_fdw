@@ -55,6 +55,7 @@ typedef struct JtableInfo
 extern Jresult * jq_exec(Jconn * conn, const char *query);
 extern Jresult * jq_prepare_id(Jconn * conn, const char *query, int *resultSetID);
 extern Jresult * jq_exec_id(Jconn * conn, int *resultSetID);
+extern Jresult * jq_prepare_exec_id(Jconn * conn, const char *query, int *resultSetID);
 extern void *jq_release_resultset_id(Jconn * conn, int resultSetID);
 extern Jresult * jq_exec_prepared(Jconn * conn, const int *paramLengths,
 								  const int *paramFormats, int resultFormat, int resultSetID);
