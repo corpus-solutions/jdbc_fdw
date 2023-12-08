@@ -37,8 +37,8 @@ public class JDBCUtils {
   private PreparedStatement tmpPstmt;
   private static ConcurrentHashMap<Integer, Connection> ConnectionHash = new ConcurrentHashMap<Integer, Connection>();
   private static int resultSetKey = 1;
-  private static ConcurrentHashMap<Integer, resultSetInfo> resultSetInfoMap =
-      new ConcurrentHashMap<Integer, resultSetInfo>();
+  private static ConcurrentHashMap<Integer, ResultSetInfo> resultSetInfoMap =
+      new ConcurrentHashMap<Integer, ResultSetInfo>();
 
   /*
    * createConnection
@@ -116,32 +116,32 @@ public class JDBCUtils {
   }
 
   /*
-   * createStatementID
+   * executeQueryStatementID
    *      Create a statement object based on the query
    *      with a specific resultID and return back to the calling C function
    *      Returns:
    *          resultID on success
    */
-  public int createStatementID(String query) throws Exception {
-    ResultSet tmpResultSet;
-    int tmpNumberOfColumns;
+  public int executeQueryStatementID(int resultSetID) throws Exception {
+	ResultSet tmpResultSet;
+	ResultSetMetaData rSetMetadata;
+	int tmpNumberOfColumns;
     int tmpNumberOfAffectedRows = 0;
-    ResultSetMetaData rSetMetadata;
-    int tmpResultSetKey;
+
     try {
       checkConnExist();
-      tmpStmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-      if (queryTimeoutValue != 0) {
-        tmpStmt.setQueryTimeout(queryTimeoutValue);
-      }
-      tmpResultSet = tmpStmt.executeQuery(query);
+	  ResultSetInfo info = resultSetInfoMap.get(resultSetID);
+      PreparedStatement tmpPstmt = info.getPstmt();
+      checkPstmt(tmpPstmt);
+      tmpPstmt.clearParameters();
+      info.setPstmt(tmpPstmt);
+
+	  tmpResultSet = tmpStmt.executeQuery(query);
       rSetMetadata = tmpResultSet.getMetaData();
       tmpNumberOfColumns = rSetMetadata.getColumnCount();
-      tmpResultSetKey = initResultSetKey();
-      resultSetInfoMap.put(
-          tmpResultSetKey,
-          new resultSetInfo(
-              tmpResultSet, tmpNumberOfColumns, tmpNumberOfAffectedRows, null));
+	  info.setNumberOfColumns(tmpNumberOfColumns);
+	  info.setNumberOfAffectedRows(tmpNumberOfAffectedRows);
+	  info.setResultSet(tmpResultSet);
       return tmpResultSetKey;
     } catch (Throwable e) {
       throw e;
@@ -176,7 +176,7 @@ public class JDBCUtils {
         tmpPstmt.setQueryTimeout(queryTimeoutValue);
       }
       int tmpResultSetKey = initResultSetKey();
-      resultSetInfoMap.put(tmpResultSetKey, new resultSetInfo(null, null, 0, tmpPstmt));
+      resultSetInfoMap.put(tmpResultSetKey, new ResultSetInfo(null, null, 0, tmpPstmt));
       return tmpResultSetKey;
     } catch (Throwable e) {
       throw e;

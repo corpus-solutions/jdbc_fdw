@@ -440,7 +440,7 @@ jdbc_exec(PG_FUNCTION_ARGS)
 
 	PG_TRY();
 	{
-		if (PG_NARGS() == 2)
+		if (PG_NARGS() >= 2)
 		{
 			servername = text_to_cstring(PG_GETARG_TEXT_PP(0));
 			sql = text_to_cstring(PG_GETARG_TEXT_PP(1));
@@ -461,8 +461,25 @@ jdbc_exec(PG_FUNCTION_ARGS)
 
 		prepTuplestoreResult(fcinfo);
 
+		/* Prepare sql statement */
+		res = jq_prepare_id(conn, sql, &resultSetID);
+		if (*res != PGRES_COMMAND_OK)
+			jdbc_fdw_report_error(ERROR, res, conn, false, sql);
+
+		if(if (PG_NARGS() > 2)
+		{
+			for(int i = 2; i < PG_NARGS; i++) {
+				 Oid element_type = get_fn_expr_argtype(fcinfo->flinfo, i);
+				 if (!OidIsValid(element_type))
+						elog(ERROR, errmsg("could not determine data type of input at position %d", i));
+				 bool isnull = PG_ARGISNULL(i);
+				 Datum element = PG_GETARG_DATUM(i);
+				 jq_bind_sql_var(conn, element_type, i-2, element, &isnull, resultSetID);
+			}
+		}
+
 		/* Execute sql query */
-		res = jq_exec_id(conn, sql, &resultSetID);
+		res = jq_exec_id(conn, &resultSetID);
 
 		if (*res != PGRES_COMMAND_OK)
 			jdbc_fdw_report_error(ERROR, res, conn, false, sql);
