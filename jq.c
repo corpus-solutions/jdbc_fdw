@@ -696,12 +696,6 @@ jq_exec_id(Jconn * conn, int *resultSetID)
 	{
 		ereport(ERROR, (errmsg("Failed to find the JDBCUtils.createStatementID method!")));
 	}
-	/* The query argument */
-	statement = (*Jenv)->NewStringUTF(Jenv, query);
-	if (statement == NULL)
-	{
-		ereport(ERROR, (errmsg("Failed to create query argument")));
-	}
 	jq_exception_clear();
 	*resultSetID = (int) (*Jenv)->CallIntMethod(Jenv, conn->JDBCUtilsObject, idexecuteQueryStatementID, *resultSetID);
 	jq_get_exception();
