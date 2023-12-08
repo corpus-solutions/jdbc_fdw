@@ -471,7 +471,7 @@ jdbc_exec(PG_FUNCTION_ARGS)
 			for(int i = 2; i < PG_NARGS(); i++) {
 				 Oid element_type = get_fn_expr_argtype(fcinfo->flinfo, i);
 				 if (!OidIsValid(element_type))
-						elog(ERROR, errmsg("could not determine data type of input at position %d", i));
+						elog(ERROR, errmsg("could not determine data type of input at position %d", &i));
 				 bool isnull = PG_ARGISNULL(i);
 				 Datum element = PG_GETARG_DATUM(i);
 				 jq_bind_sql_var(conn, element_type, i-2, element, &isnull, resultSetID);
