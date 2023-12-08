@@ -630,7 +630,7 @@ jq_prepare_id(Jconn * conn, const char *query, int *resultSetID)
 }
 
 Jresult *
-jq_exec_id(Jconn * conn, const char *query, int *resultSetID)
+jq_prepare_exec_id(Jconn * conn, const char *query, int *resultSetID)
 {
 	jmethodID	idCreateStatementID;
 	jstring		statement;
@@ -683,7 +683,7 @@ jq_exec_id(Jconn * conn, int *resultSetID)
 	jobject		JDBCUtilsObject;
 	Jresult    *res;
 
-	ereport(DEBUG3, (errmsg("In jq_exec_id(%p): %s", conn, query)));
+	ereport(DEBUG3, (errmsg("In jq_exec_id(%p)", conn)));
 
 	jq_get_JDBCUtils(conn, &JDBCUtilsClass, &JDBCUtilsObject);
 
