@@ -24,7 +24,7 @@ TRGTS = JAVAFILES
 JAVA_SOURCES = \
 	JDBCUtils.java \
 	JDBCDriverLoader.java \
-	ResultSetInfo.java
+	ResultSetInfo.java \
 
 QUOTE_ALL_IDENTIFIERS ?= false
 
