@@ -150,7 +150,7 @@ public class JDBCUtils {
 
   /*
    * executeQueryStatementID
-   *      Create a statement object based on the query
+   *      Execute query on previously prepared statement
    *      with a specific resultID and return back to the calling C function
    *      Returns:
    *          resultID on success
@@ -169,7 +169,7 @@ public class JDBCUtils {
       tmpPstmt.clearParameters();
       info.setPstmt(tmpPstmt);
 
-	  tmpResultSet = tmpStmt.executeQuery(query);
+	  tmpResultSet = tmpPstmt.executeQuery();
       rSetMetadata = tmpResultSet.getMetaData();
       tmpNumberOfColumns = rSetMetadata.getColumnCount();
 	  info.setNumberOfColumns(tmpNumberOfColumns);
