@@ -314,6 +314,7 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 
 	if (FunctionCallCheck == false)
 	{
+		ereport(DEBUG3, (errmsg("Starting JNI_CreateJavaVM") ));
 		const char* env_classpath = getenv("CLASSPATH");
 
 		if (env_classpath != NULL) {
@@ -512,6 +513,8 @@ jdbc_get_server_options(JserverOptions * opts, const ForeignServer * f_server, c
 {
 	List	   *options;
 	ListCell   *lc;
+
+	ereport(DEBUG3, (errmsg("In jdbc_get_server_options") ));
 
 	/* Collect options from server and user mapping */
 	options = NIL;
