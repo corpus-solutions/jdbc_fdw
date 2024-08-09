@@ -382,6 +382,10 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 		} else {
 			ereport(DEBUG3, (errmsg("JVMEnvStat: unknown! %d", JVMEnvStat)));
 		}
+
+		if(opts->drivername  == NULL) {
+		  jdbc_get_server_options(&opts, server, user);
+		}
 	}
 	jdbc_sig_int_interrupt_check_process();
 }
