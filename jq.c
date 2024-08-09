@@ -370,6 +370,7 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 		if (JVMEnvStat == JNI_EDETACHED)
 		{
 			ereport(DEBUG3, (errmsg("JVMEnvStat: JNI_EDETACHED; the current thread is not attached to the VM")));
+			jdbc_get_server_options(&opts, server, user);
 			jdbc_attach_jvm();
 		}
 		else if (JVMEnvStat == JNI_OK)
@@ -381,10 +382,6 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 			ereport(ERROR, (errmsg("JVMEnvStat: JNI_EVERSION; the specified version is not supported")));
 		} else {
 			ereport(DEBUG3, (errmsg("JVMEnvStat: unknown! %d", JVMEnvStat)));
-		}
-
-		if(opts.drivername  == NULL) {
-		  jdbc_get_server_options(&opts, server, user);
 		}
 	}
 	jdbc_sig_int_interrupt_check_process();
