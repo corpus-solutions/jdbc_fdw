@@ -308,7 +308,7 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 
 	opts.maxheapsize = 0;
 
-	ereport(DEBUG3, (errmsg("In jdbc_jvm_init server: %d, user: %d", server->serverid, user->userid)));
+	ereport(DEBUG3, (errmsg("In jdbc_jvm_init server: %d, user: %d, already running: %d", server->serverid, user->userid, FunctionCallCheck)));
 	jdbc_get_server_options(&opts, server, user);	/* Get the maxheapsize
 													 * value (if set) */
 
