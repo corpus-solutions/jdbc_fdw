@@ -363,6 +363,8 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 	{
 		int			JVMEnvStat;
 
+		ereport(DEBUG3, (errmsg("Starting JVM GetEnv") ));
+
 		vm_args.version = JNI_VERSION_1_2;
 		JVMEnvStat = (*jvm)->GetEnv(jvm, (void **) &Jenv, vm_args.version);
 		if (JVMEnvStat == JNI_EDETACHED)
