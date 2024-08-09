@@ -309,13 +309,14 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 	opts.maxheapsize = 0;
 
 	ereport(DEBUG3, (errmsg("In jdbc_jvm_init server: %d, user: %d, already running: %d", server->serverid, user->userid, FunctionCallCheck)));
-	jdbc_get_server_options(&opts, server, user);	/* Get the maxheapsize
-													 * value (if set) */
 
 	if (FunctionCallCheck == false)
 	{
 		ereport(DEBUG3, (errmsg("Starting JNI_CreateJavaVM") ));
 		const char* env_classpath = getenv("CLASSPATH");
+
+	    jdbc_get_server_options(&opts, server, user);	/* Get the maxheapsize
+													 * value (if set) */
 
 		if (env_classpath != NULL) {
 			classpath = psprintf("-Djava.class.path=%s" PATH_SEPARATOR "%s", strpkglibdir, env_classpath);
