@@ -377,6 +377,8 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 		else if (JVMEnvStat == JNI_EVERSION)
 		{
 			ereport(ERROR, (errmsg("JVMEnvStat: JNI_EVERSION; the specified version is not supported")));
+		} else {
+			ereport(DEBUG3, (errmsg("JVMEnvStat: unknown! %d", JVMEnvStat)));
 		}
 	}
 }
