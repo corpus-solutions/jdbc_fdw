@@ -312,8 +312,6 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 	jdbc_get_server_options(&opts, server, user);	/* Get the maxheapsize
 													 * value (if set) */
 
-	jdbc_sig_int_interrupt_check_process();
-
 	if (FunctionCallCheck == false)
 	{
 		const char* env_classpath = getenv("CLASSPATH");
@@ -383,6 +381,7 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
 			ereport(DEBUG3, (errmsg("JVMEnvStat: unknown! %d", JVMEnvStat)));
 		}
 	}
+	jdbc_sig_int_interrupt_check_process();
 }
 
 /*
