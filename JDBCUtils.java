@@ -77,8 +77,8 @@ public class JDBCUtils {
       jdbcDriverClass = jdbcDriverLoader.loadClass(driverClassName);
       jdbcDriver = (Driver) jdbcDriverClass.newInstance();
       jdbcProperties = new Properties();
-      jdbcProperties.put("user", userName);
-      jdbcProperties.put("password", password);
+      jdbcProperties.put("avatica_user", userName);
+      jdbcProperties.put("avatica_password", password);
       /* get connection from cache */
       if (ConnectionHash.containsKey(key)) {
         conn = ConnectionHash.get(key);
