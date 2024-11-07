@@ -84,7 +84,7 @@ static JserverOptions opts;
 static int	jdbc_connect_db_complete(Jconn * conn);
 void jdbc_jvm_init(const ForeignServer * server, const UserMapping * user);
 static void jdbc_get_server_options(JserverOptions * opts, const ForeignServer * f_server, const UserMapping * f_mapping);
-static Jconn * jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * user);
+static Jconn * jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * user, const char *username);
 /*
  * Uses a String object's content to create an instance of C String
  */
@@ -444,7 +444,7 @@ jdbc_jvm_init(const ForeignServer * server, const UserMapping * user)
  * Jconn.status = CONNECTION_BAD
  */
 static Jconn *
-jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * user)
+jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * user, const char *username)
 {
 	jmethodID	idCreate;
 	jstring		stringArray[6];
@@ -501,7 +501,7 @@ jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * us
 	snprintf(querytimeout_string, intSize, "%d", opts.querytimeout);
 	stringArray[0] = (*Jenv)->NewStringUTF(Jenv, opts.drivername);
 	stringArray[1] = (*Jenv)->NewStringUTF(Jenv, opts.url);
-	stringArray[2] = (*Jenv)->NewStringUTF(Jenv, opts.username);
+	stringArray[2] = (*Jenv)->NewStringUTF(Jenv, username);
 	stringArray[3] = (*Jenv)->NewStringUTF(Jenv, opts.password);
 	stringArray[4] = (*Jenv)->NewStringUTF(Jenv, querytimeout_string);
 	stringArray[5] = (*Jenv)->NewStringUTF(Jenv, opts.jarfile);
@@ -1123,7 +1123,7 @@ jq_get_is_null(const Jresult * res, int tup_num, int field_num)
 
 Jconn *
 jq_connect_db_params(const ForeignServer * server, const UserMapping * user,
-					 const char *const *keywords, const char *const *values)
+					 const char *username)
 {
 	Jconn	   *conn;
 	int			i = 0;
@@ -1131,25 +1131,7 @@ jq_connect_db_params(const ForeignServer * server, const UserMapping * user,
 	ereport(DEBUG3, (errmsg("In jq_connect_db_params")));
 	/* Initialize the Java JVM (if it has not been done already) */
 	jdbc_jvm_init(server, user);
-	while (keywords[i])
-	{
-		const char *pvalue = values[i];
-		if (strcmp(keywords[i], "username") == 0)
-		{
-			opts.username = pvalue;
-			ereport(DEBUG3, (errmsg("Username %s in jq_connect_db_params", opts.username)));
-		}
-		if (strcmp(keywords[i], "password") == 0)
-		{
-			opts.password = pvalue;
-		}
-		if (pvalue == NULL && pvalue[0] == '\0')
-		{
-			break;
-		}
-		i++;
-	}
-	conn = jdbc_create_JDBC_connection(server, user);
+	conn = jdbc_create_JDBC_connection(server, user, username);
 	if (jq_status(conn) == CONNECTION_BAD)
 	{
 		(void) jdbc_connect_db_complete(conn);

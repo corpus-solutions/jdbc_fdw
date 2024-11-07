@@ -66,8 +66,7 @@ extern Jresult * jq_prepare(Jconn * conn, const char *query,
 							const Oid * paramTypes, int *resultSetID);
 extern int	jq_nfields(const Jresult * res);
 extern int	jq_get_is_null(const Jresult * res, int tup_num, int field_num);
-extern Jconn * jq_connect_db_params(const ForeignServer * server, const UserMapping * user, const char *const *keywords,
-									const char *const *values);
+extern Jconn * jq_connect_db_params(const ForeignServer * server, const UserMapping * user, const char *username);
 extern ConnStatusType jq_status(const Jconn * conn);
 extern char *jq_error_message(const Jconn * conn);
 extern int	jq_connection_used_password(const Jconn * conn);

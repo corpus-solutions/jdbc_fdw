@@ -66,7 +66,6 @@ static volatile bool xact_got_connection = false;
 
 /* prototypes of private functions */
 static Jconn * connect_jdbc_server(ForeignServer *server, UserMapping *user, char *username);
-static void jdbc_check_conn_params(const char **keywords, const char **values, char *username);
 static void jdbc_do_sql_command(Jconn * conn, const char *sql);
 static void jdbcfdw_xact_callback(XactEvent event, void *arg);
 
@@ -211,44 +210,7 @@ connect_jdbc_server(ForeignServer *server, UserMapping *user, char *username)
 	 */
 	PG_TRY();
 	{
-		const char **keywords;
-		const char **values;
-		int			n;
-
-		/*
-		 * Construct connection params from generic options of ForeignServer
-		 * and UserMapping.  (Some of them might not be libpq options, in
-		 * which case we'll just waste a few array slots.)  Add 3 extra slots
-		 * for fallback_application_name, client_encoding, end marker.
-		 */
-		n = list_length(server->options) + list_length(user->options) + 3;
-		keywords = (const char **) palloc(n * sizeof(char *));
-		values = (const char **) palloc(n * sizeof(char *));
-
-		n = 0;
-		n += jdbc_extract_connection_options(server->options,
-											 keywords + n, values + n);
-		n += jdbc_extract_connection_options(user->options,
-											 keywords + n, values + n);
-
-		/* Use "jdbc_fdw" as fallback_application_name. */
-		keywords[n] = "fallback_application_name";
-		values[n] = "jdbc_fdw";
-		n++;
-
-		/*
-		 * Set client_encoding so that libpq can convert encoding properly.
-		 */
-		keywords[n] = "client_encoding";
-		values[n] = GetDatabaseEncodingName();
-		n++;
-
-		keywords[n] = values[n] = NULL;
-
-		/* verify connection parameters and make connection */
-		jdbc_check_conn_params(keywords, values, username);
-
-		conn = jq_connect_db_params(server, user, keywords, values);
+		conn = jq_connect_db_params(server, user, username);
 		if (!conn || jq_status(conn) != CONNECTION_OK)
 		{
 			char	   *connmessage;
@@ -277,9 +239,6 @@ connect_jdbc_server(ForeignServer *server, UserMapping *user, char *username)
 					 errmsg("password is required"),
 					 errdetail("Non-superuser cannot connect if the server does not request a password."),
 					 errhint("Target server's authentication method must be changed.")));
-
-		pfree(keywords);
-		pfree(values);
 	}
 	PG_CATCH();
 	{
@@ -291,40 +250,6 @@ connect_jdbc_server(ForeignServer *server, UserMapping *user, char *username)
 
 	return conn;
 }
-
-/*
- * For non-superusers, insist that the connstr specify a password.  This
- * prevents a password from being picked up from .pgpass, a service file, the
- * environment, etc.  We don't want the postgres user's passwords to be
- * accessible to non-superusers.  (See also dblink_connstr_check in
- * contrib/dblink.)
- */
-static void
-jdbc_check_conn_params(const char **keywords, const char **values, char *username)
-{
-	int			i;
-	int         passOk = 0;
-
-	/* ok if params contain a non-empty password */
-	for (i = 0; keywords[i] != NULL; i++)
-	{
-		if (strcmp(keywords[i], "password") == 0 && values[i][0] != '\0')
-			passOk = 1;
-		if (strcmp(keywords[i], "username") == 0)
-			values[i] = username;
-	}
-
-		/* no check required if superuser */
-	if (superuser())
-		return;
-
-	if(passOk == 0)
-	  ereport(ERROR,
-			(errcode(ERRCODE_S_R_E_PROHIBITED_SQL_STATEMENT_ATTEMPTED),
-			 errmsg("password is required"),
-			 errdetail("Non-superusers must provide a password in the user mapping.")));
-}
-
 
 /*
  * Convenience subroutine to issue a non-data-returning SQL command to remote
