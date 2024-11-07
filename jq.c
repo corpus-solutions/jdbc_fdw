@@ -696,7 +696,7 @@ jq_prepare_exec_id(Jconn * conn, const char *query, int *resultSetID)
 	jobject		JDBCUtilsObject;
 	Jresult    *res;
 
-	ereport(DEBUG3, (errmsg("In jq_exec_id(%p): %s", conn, query)));
+	ereport(DEBUG3, (errmsg("In jq_prepare_exec_id(%p): %s", conn, query)));
 
 	jq_get_JDBCUtils(conn, &JDBCUtilsClass, &JDBCUtilsObject);
 
