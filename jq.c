@@ -1137,8 +1137,14 @@ jq_connection_used_password(const Jconn * conn)
 void
 jq_finish(Jconn * conn)
 {
-	ereport(DEBUG3, (errmsg("In jq_finish for conn=%p", conn)));
-	jdbc_detach_jvm();
+	if(conn != NULL) {
+	  ereport(DEBUG3, (errmsg("In jq_finish for conn=%p", conn)));
+	} else {
+	  ereport(DEBUG3, (errmsg("In jq_finish")));
+	}
+	if(jvm != NULL) {
+	  jdbc_detach_jvm();
+	}
 	conn = NULL;
 	return;
 }

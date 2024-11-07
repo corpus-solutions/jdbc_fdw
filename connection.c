@@ -268,8 +268,7 @@ connect_jdbc_server(ForeignServer *server, UserMapping *user)
 	PG_CATCH();
 	{
 		/* Release Jconn data structure if we managed to create one */
-		if (conn)
-			jq_finish(conn);
+		jq_finish(conn);
 		PG_RE_THROW();
 	}
 	PG_END_TRY();
