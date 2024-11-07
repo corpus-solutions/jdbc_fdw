@@ -1203,6 +1203,8 @@ jq_close(Jconn * conn)
 	if (jvm == NULL || Jenv == NULL)
 		return;
 
+	ereport(DEBUG3, (errmsg("In jq_close")));
+
 	PG_TRY();
 	{
 		JDBCUtilsClass = (*Jenv)->FindClass(Jenv, "JDBCUtils");
