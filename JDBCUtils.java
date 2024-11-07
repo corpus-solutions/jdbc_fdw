@@ -89,7 +89,7 @@ public class JDBCUtils {
       }
       dbMetadata = conn.getMetaData();
     } catch (Throwable e) {
-      throw e;
+      throw new RuntimeException("Cannot create connection for driverClassName="+driverClassName+",fileName="+fileName+":\n"+e.getMessage(), e);
     }
   }
 
