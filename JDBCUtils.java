@@ -84,6 +84,8 @@ public class JDBCUtils {
         Connection oldConn = ConnectionHash.get(key);
         if(oldConn.isValid(1)) {
           conn = oldConn;
+        } else if(!oldConn.closed()) {
+          oldConn.close();
         }
       }
       if (conn == null) {
