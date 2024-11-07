@@ -126,7 +126,7 @@ void		jq_exception_clear(void);
 /*
  * check for pending exceptions
  */
-void		jq_get_exception(void);
+void		jq_get_exception(const char*);
 
 /*
  * get table infomations for importForeignSchema
@@ -163,7 +163,7 @@ jdbc_sig_int_interrupt_check_process()
 		}
 		jq_exception_clear();
 		(*Jenv)->CallObjectMethod(Jenv, java_call, id_cancel);
-		jq_get_exception();
+		jq_get_exception("JDBCUtils.cancel");
 		InterruptFlag = false;
 		elog(ERROR, "Query has been cancelled");
 	}
@@ -486,7 +486,7 @@ jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * us
 	}
 	jq_exception_clear();
 	(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idCreate, keyid, argArray);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.createConnection");
 	/* Return Java memory */
 	for (i = 0; i < numParams; i++)
 	{
@@ -497,7 +497,7 @@ jdbc_create_JDBC_connection(const ForeignServer * server, const UserMapping * us
 	/* get default identifier quote string */
 	jq_exception_clear();
 	identifierQuoteString = (jstring) (*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idGetIdentifierQuoteString);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getIdentifierQuoteString");
 	quote_string = jdbc_convert_string_to_cstring((jobject) identifierQuoteString);
 	conn->q_char = pstrdup(quote_string);
 	conn->status = CONNECTION_OK;
@@ -589,7 +589,7 @@ jq_exec(Jconn * conn, const char *query)
 	}
 	jq_exception_clear();
 	(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idCreateStatement, statement);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.createStatement");
 	/* Return Java memory */
 	(*Jenv)->DeleteLocalRef(Jenv, statement);
 	*res = PGRES_COMMAND_OK;
@@ -625,7 +625,7 @@ jq_prepare_id(Jconn * conn, const char *query, int *resultSetID)
 	}
 	jq_exception_clear();
 	*resultSetID = (int) (*Jenv)->CallIntMethod(Jenv, conn->JDBCUtilsObject, idCreateStatementID, statement);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.createPreparedStatement");
 	if (*resultSetID < 0)
 	{
 		ereport(ERROR, (errmsg("Get resultSetID failed with code: %d", *resultSetID)));
@@ -667,7 +667,7 @@ jq_prepare_exec_id(Jconn * conn, const char *query, int *resultSetID)
 	}
 	jq_exception_clear();
 	*resultSetID = (int) (*Jenv)->CallIntMethod(Jenv, conn->JDBCUtilsObject, idCreateStatementID, statement);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.createAndExecStatementID");
 	if (*resultSetID < 0)
 	{
 		/* Return Java memory */
@@ -705,7 +705,7 @@ jq_exec_id(Jconn * conn, int *resultSetID)
 	}
 	jq_exception_clear();
 	*resultSetID = (int) (*Jenv)->CallIntMethod(Jenv, conn->JDBCUtilsObject, idexecuteQueryStatementID, *resultSetID);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.executeQueryStatementID");
 	if (*resultSetID < 0)
 	{
 		ereport(ERROR, (errmsg("Get resultSetID failed with code: %d", *resultSetID)));
@@ -738,7 +738,7 @@ jq_release_resultset_id(Jconn * conn, int resultSetID)
 	}
 	jq_exception_clear();
 	(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idClearResultSetID, resultSetID);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.clearResultSetID");
 
 	return NULL;
 }
@@ -779,7 +779,7 @@ jq_iterate(Jconn * conn, ForeignScanState * node, List * retrieved_attrs, int re
 	}
 	jq_exception_clear();
 	numberOfColumns = (int) (*Jenv)->CallIntMethod(Jenv, conn->JDBCUtilsObject, idNumberOfColumns, resultSetID);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getNumberOfColumns");
 	if (numberOfColumns < 0)
 	{
 		ereport(ERROR, (errmsg("getNumberOfColumns got wrong value: %d", numberOfColumns)));
@@ -798,7 +798,7 @@ jq_iterate(Jconn * conn, ForeignScanState * node, List * retrieved_attrs, int re
 	/* Allocate pointers to the row data */
 	jq_exception_clear();
 	rowArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idResultSet, resultSetID);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getResultSet");
 	if (rowArray != NULL)
 	{
 		if(retrieved_attrs != NIL){
@@ -890,7 +890,7 @@ jq_iterate_all_row(FunctionCallInfo fcinfo, Jconn * conn, TupleDesc tupleDescrip
 	}
 	jq_exception_clear();
 	numberOfColumns = (int) (*Jenv)->CallIntMethod(Jenv, conn->JDBCUtilsObject, idNumberOfColumns, resultSetID);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getNumberOfColumns");
 	if (numberOfColumns < 0)
 	{
 		ereport(ERROR, (errmsg("getNumberOfColumns got wrong value: %d", numberOfColumns)));
@@ -912,7 +912,7 @@ jq_iterate_all_row(FunctionCallInfo fcinfo, Jconn * conn, TupleDesc tupleDescrip
 		/* Allocate pointers to the row data */
 		jq_exception_clear();
 		rowArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idResultSet, resultSetID);
-		jq_get_exception();
+		jq_get_exception("JDBCUtils.getResultSet");
 
 		if (rowArray != NULL)
 		{
@@ -979,7 +979,7 @@ jq_exec_prepared(Jconn * conn, const int *paramLengths,
 	}
 	jq_exception_clear();
 	(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idExecPreparedStatement, resultSetID);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.execPreparedStatement");
 
 	/* Return Java memory */
 	*res = PGRES_COMMAND_OK;
@@ -1041,7 +1041,7 @@ jq_prepare(Jconn * conn, const char *query,
 	jq_exception_clear();
 	/* get the resultSetID */
 	*resultSetID = (int) (*Jenv)->CallIntMethod(Jenv, conn->JDBCUtilsObject, idCreatePreparedStatement, statement);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.createPreparedStatement");
 	if (*resultSetID < 0)
 	{
 		/* Return Java memory */
@@ -1191,7 +1191,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 		}
 		jq_exception_clear();
 		(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, attnum, resultSetID);
-		jq_get_exception();
+		jq_get_exception("JDBCUtils.bindNullPreparedStatement");
 		*res = PGRES_COMMAND_OK;
 		return NULL;
 	}
@@ -1210,7 +1210,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindIntPreparedStatement");
 				break;
 			}
 		case INT4OID:
@@ -1225,7 +1225,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindIntPreparedStatement");
 				break;
 			}
 		case INT8OID:
@@ -1240,7 +1240,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindLongPreparedStatement");
 				break;
 			}
 
@@ -1257,7 +1257,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindFloatPreparedStatement");
 				break;
 			}
 		case FLOAT8OID:
@@ -1272,7 +1272,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindDoublePreparedStatement");
 				break;
 			}
 
@@ -1289,7 +1289,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindDoublePreparedStatement");
 				break;
 			}
 		case BOOLOID:
@@ -1304,7 +1304,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindBooleanPreparedStatement");
 				break;
 			}
 
@@ -1338,7 +1338,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, retArray, len, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindByteaPreparedStatement");
 				break;
 			}
 		case BPCHAROID:
@@ -1368,7 +1368,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindStringPreparedStatement");
 
 				/* Return Java memory */
 				(*Jenv)->DeleteLocalRef(Jenv, dat);
@@ -1395,7 +1395,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindTimePreparedStatement");
 
 				/* Return Java memory */
 				(*Jenv)->DeleteLocalRef(Jenv, dat);
@@ -1422,7 +1422,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, dat, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindTimeTZPreparedStatement");
 
 				/* Return Java memory */
 				(*Jenv)->DeleteLocalRef(Jenv, dat);
@@ -1446,7 +1446,7 @@ jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bool *isnull, i
 				}
 				jq_exception_clear();
 				(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, idBindPreparedStatement, valueMicroSecs, attnum, resultSetID);
-				jq_get_exception();
+				jq_get_exception("JDBCUtils.bindTimestampPreparedStatement");
 				break;
 			}
 		default:
@@ -1506,7 +1506,7 @@ jq_exception_clear()
  * to String for ouputing error message
  */
 void
-jq_get_exception()
+jq_get_exception(const char *msg)
 {
 	/* check for pending exceptions */
 	if ((*Jenv)->ExceptionCheck(Jenv))
@@ -1530,7 +1530,7 @@ jq_get_exception()
 		exceptionMsg = (jstring) (*Jenv)->CallObjectMethod(Jenv, exc, exceptionMsgID);
 		exceptionString = jdbc_convert_string_to_cstring((jobject) exceptionMsg);
 		err_msg = pstrdup(exceptionString);
-		ereport(ERROR, (errmsg("Error in jdbc_fdw!\n%s", err_msg)));
+		ereport(ERROR, (errmsg("Error in jdbc_fdw - %s!\n%s", msg, err_msg)));
 	}
 	return;
 }
@@ -1586,7 +1586,7 @@ jq_get_column_infos(Jconn * conn, char *tablename)
 	}
 	jq_exception_clear();
 	columnNamesArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idGetColumnNames, jtablename);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getColumnNames");
 	/* getColumnTypes */
 	idGetColumnTypes = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "getColumnTypes", "(Ljava/lang/String;)[Ljava/lang/String;");
 	if (idGetColumnTypes == NULL)
@@ -1600,7 +1600,7 @@ jq_get_column_infos(Jconn * conn, char *tablename)
 	}
 	jq_exception_clear();
 	columnTypesArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idGetColumnTypes, jtablename);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getColumnTypes");
 	/* getPrimaryKey */
 	idGetPrimaryKey = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "getPrimaryKey", "(Ljava/lang/String;)[Ljava/lang/String;");
 	if (idGetPrimaryKey == NULL)
@@ -1618,7 +1618,7 @@ jq_get_column_infos(Jconn * conn, char *tablename)
 	}
 	jq_exception_clear();
 	primaryKeyArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idGetPrimaryKey, jtablename);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getPrimaryKey");
 	if (primaryKeyArray != NULL)
 	{
 		numberOfKeys = (*Jenv)->GetArrayLength(Jenv, primaryKeyArray);
@@ -1737,7 +1737,7 @@ jq_get_column_infos_without_key(Jconn * conn, int *resultSetID, int *column_num)
 	}
 	jq_exception_clear();
 	columnNamesArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idGetColumnNamesByResultSetID, jresultSetID);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getColumnNamesByResultSetID");
 
 	/* getColumnTypes by resultSetID */
 	idGetColumnTypesByResultSetID = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "getColumnTypesByResultSetID", "(I)[Ljava/lang/String;");
@@ -1751,7 +1751,7 @@ jq_get_column_infos_without_key(Jconn * conn, int *resultSetID, int *column_num)
 	}
 	jq_exception_clear();
 	columnTypesArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idGetColumnTypesByResultSetID, jresultSetID);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getColumnTypesByResultSetID");
 
 	/* getNumberOfColumns */
 	idNumberOfColumns = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "getNumberOfColumns", "(I)I");
@@ -1762,7 +1762,7 @@ jq_get_column_infos_without_key(Jconn * conn, int *resultSetID, int *column_num)
 	jq_exception_clear();
 	numberOfColumns = (int) (*Jenv)->CallIntMethod(Jenv, JDBCUtilsObject, idNumberOfColumns, jresultSetID);
 	*column_num = numberOfColumns;
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getNumberOfColumns");
 
 	if (columnNamesArray != NULL && columnTypesArray != NULL)
 	{
@@ -1829,7 +1829,7 @@ jq_get_table_names(Jconn * conn, char *remote_schema)
 	}
 	jq_exception_clear();
 	tableNameArray = (*Jenv)->CallObjectMethod(Jenv, JDBCUtilsObject, idGetTableNames, jschemaname);
-	jq_get_exception();
+	jq_get_exception("JDBCUtils.getTableNames");
 	(*Jenv)->DeleteLocalRef(Jenv, jschemaname);
 	if (tableNameArray != NULL)
 	{
