@@ -1129,18 +1129,25 @@ jq_connect_db_params(const ForeignServer * server, const UserMapping * user,
 	int			i = 0;
 
 	ereport(DEBUG3, (errmsg("In jq_connect_db_params")));
+	/* Initialize the Java JVM (if it has not been done already) */
+	jdbc_jvm_init(server, user);
 	while (keywords[i])
 	{
 		const char *pvalue = values[i];
-
+		if (strcmp(keywords[i], "username") == 0)
+		{
+			opts.username = values[i];
+		}
+		if (strcmp(keywords[i], "password") == 0)
+		{
+			opts.password = values[i];
+		}
 		if (pvalue == NULL && pvalue[0] == '\0')
 		{
 			break;
 		}
 		i++;
 	}
-	/* Initialize the Java JVM (if it has not been done already) */
-	jdbc_jvm_init(server, user);
 	conn = jdbc_create_JDBC_connection(server, user);
 	if (jq_status(conn) == CONNECTION_BAD)
 	{

@@ -100,7 +100,7 @@ jdbc_get_connection(ForeignServer *server, UserMapping *user,
 	char	   *usePgRoleName = NULL;
 	char       *username;
 
-	ereport(DEBUG3, (errmsg("In jdbc_get_server_options") ));
+	ereport(DEBUG3, (errmsg("jdbc_get_connection") ));
 	/* Loop through the options, and get the values */
 	foreach(lc, user->options)
 	{
@@ -123,6 +123,8 @@ jdbc_get_connection(ForeignServer *server, UserMapping *user,
 	if (usePgRoleName != NULL && strcmp(usePgRoleName, "true") == 0)
 	{
 		username = GetUserNameFromId(user->userid, false);
+	} else {
+		username = defGetString(userDef);
 	}
 
 	/* First time through, initialize connection cache hashtable */
