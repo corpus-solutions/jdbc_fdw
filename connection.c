@@ -26,7 +26,7 @@
 #include "utils/memutils.h"
 #include "utils/elog.h"
 #include "utils/syscache.h"
-
+#include "commands/defrem.h"
 
 /*
  * Connection cache hash table entry
@@ -65,8 +65,8 @@ static unsigned int prep_stmt_number = 0;
 static volatile bool xact_got_connection = false;
 
 /* prototypes of private functions */
-static Jconn * connect_jdbc_server(ForeignServer *server, UserMapping *user);
-static void jdbc_check_conn_params(const char **keywords, const char **values);
+static Jconn * connect_jdbc_server(ForeignServer *server, UserMapping *user, char *username);
+static void jdbc_check_conn_params(const char **keywords, const char **values, char *username);
 static void jdbc_do_sql_command(Jconn * conn, const char *sql);
 static void jdbcfdw_xact_callback(XactEvent event, void *arg);
 
@@ -94,6 +94,36 @@ jdbc_get_connection(ForeignServer *server, UserMapping *user,
 	bool		found;
 	ConnCacheEntry *entry;
 	ConnCacheKey key;
+
+	ListCell   *lc;
+	DefElem    *userDef = NULL;
+	char	   *usePgRoleName = NULL;
+	char       *username;
+
+	ereport(DEBUG3, (errmsg("In jdbc_get_server_options") ));
+	/* Loop through the options, and get the values */
+	foreach(lc, user->options)
+	{
+		DefElem    *def = (DefElem *) lfirst(lc);
+		if (strcmp(def->defname, "usePgRoleName") == 0)
+		{
+			usePgRoleName = defGetString(def);
+		}
+		if (strcmp(def->defname, "username") == 0)
+		{
+			userDef = def;
+		}
+	}
+
+	if(userDef == NULL)
+	{
+		ereport(ERROR, (errmsg("No username provided in user mapping options!")));
+	}
+
+	if (usePgRoleName != NULL && strcmp(usePgRoleName, "true") == 0)
+	{
+		username = GetUserNameFromId(user->userid, false);
+	}
 
 	/* First time through, initialize connection cache hashtable */
 	if (ConnectionHash == NULL)
@@ -152,7 +182,7 @@ jdbc_get_connection(ForeignServer *server, UserMapping *user,
 	{
 		entry->have_prep_stmt = false;
 		entry->have_error = false;
-		entry->conn = connect_jdbc_server(server, user);
+		entry->conn = connect_jdbc_server(server, user, username);
 	}
 	else
 	{
@@ -170,7 +200,7 @@ jdbc_get_connection(ForeignServer *server, UserMapping *user,
  * properties.
  */
 static Jconn *
-connect_jdbc_server(ForeignServer *server, UserMapping *user)
+connect_jdbc_server(ForeignServer *server, UserMapping *user, char *username)
 {
 	Jconn	   *volatile conn = NULL;
 
@@ -214,7 +244,7 @@ connect_jdbc_server(ForeignServer *server, UserMapping *user)
 		keywords[n] = values[n] = NULL;
 
 		/* verify connection parameters and make connection */
-		jdbc_check_conn_params(keywords, values);
+		jdbc_check_conn_params(keywords, values, username);
 
 		conn = jq_connect_db_params(server, user, keywords, values);
 		if (!conn || jq_status(conn) != CONNECTION_OK)
@@ -268,22 +298,26 @@ connect_jdbc_server(ForeignServer *server, UserMapping *user)
  * contrib/dblink.)
  */
 static void
-jdbc_check_conn_params(const char **keywords, const char **values)
+jdbc_check_conn_params(const char **keywords, const char **values, char *username)
 {
 	int			i;
-
-	/* no check required if superuser */
-	if (superuser())
-		return;
+	int         passOk = 0;
 
 	/* ok if params contain a non-empty password */
 	for (i = 0; keywords[i] != NULL; i++)
 	{
 		if (strcmp(keywords[i], "password") == 0 && values[i][0] != '\0')
-			return;
+			passOk = 1;
+		if (strcmp(keywords[i], "username") == 0)
+			values[i] = username;
 	}
 
-	ereport(ERROR,
+		/* no check required if superuser */
+	if (superuser())
+		return;
+
+	if(passOk == 0)
+	  ereport(ERROR,
 			(errcode(ERRCODE_S_R_E_PROHIBITED_SQL_STATEMENT_ATTEMPTED),
 			 errmsg("password is required"),
 			 errdetail("Non-superusers must provide a password in the user mapping.")));

@@ -163,6 +163,7 @@ init_jdbcfdw_options(void)
 		{"maxheapsize", ForeignServerRelationId, false},
 		{"username", UserMappingRelationId, false},
 		{"password", UserMappingRelationId, false},
+		{"usePgRoleName", UserMappingRelationId, false},
 		/* use_remote_estimate is available on both server and table */
 		{"use_remote_estimate", ForeignServerRelationId, false},
 		{"use_remote_estimate", ForeignTableRelationId, false},
