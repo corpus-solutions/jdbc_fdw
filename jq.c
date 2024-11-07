@@ -137,6 +137,56 @@ static List * jq_get_table_names(Jconn * conn, char *remote_schema);
 
 static void jq_get_JDBCUtils(Jconn *conn, jclass *JDBCUtilsClass, jobject *JDBCUtilsObject);
 
+/* jq_cancel
+ * 		Call cancel method from JDBCUtilsObject to release
+ *		prepared statement and temporary result-set.
+ */
+void
+jq_cancel(Jconn * jdbcUtilsInfo)
+{
+	jclass		JDBCUtilsClass;
+	jmethodID	id_cancel;
+	MemoryContext ccxt = CurrentMemoryContext;
+
+	/* JDBCUtils object has been cleaned, do nothing */
+	if (jvm == NULL || Jenv == NULL)
+		return;
+
+	PG_TRY();
+	{
+		JDBCUtilsClass = (*Jenv)->FindClass(Jenv, "JDBCUtils");
+		if (JDBCUtilsClass == NULL)
+		{
+			elog(ERROR, "JDBCUtilsClass is NULL");
+		}
+		id_cancel = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "cancel",
+											"()V");
+		if (id_cancel == NULL)
+		{
+			elog(ERROR, "id_cancel is NULL");
+		}
+		jq_exception_clear();
+		(*Jenv)->CallObjectMethod(Jenv, jdbcUtilsInfo->JDBCUtilsObject, id_cancel);
+		jq_get_exception("JDBCUtils.cancel");
+	}
+	PG_CATCH();
+	{
+		ErrorData  *edata;
+
+		/* Save error info */
+		MemoryContextSwitchTo(ccxt);
+		edata = CopyErrorData();
+		FlushErrorState();
+
+		/*
+		 * We are in Transaction abort callback, raise error here may making
+		 * the infinity loop.
+		 */
+		elog(WARNING, "jq_cancel failed: %s", edata->message);
+	}
+	PG_END_TRY();
+}
+
 /*
  * jdbc_sig_int_interrupt_check_process Checks and processes if SIGINT
  * interrupt occurs
@@ -1135,38 +1185,57 @@ jq_connection_used_password(const Jconn * conn)
 }
 
 void
-jq_finish(Jconn * conn)
+jq_finish()
 {
-	jmethodID	idClose;
-    jclass		JDBCUtilsClass;
+	if(jvm != NULL) {
+	  jdbc_detach_jvm();
+	}
+}
 
-	if(conn != NULL) {
-	  ereport(DEBUG3, (errmsg("In jq_finish for conn=%p", conn)));
-	  /* Our object of the JDBCUtils class is on the connection */
-	  if (conn->JDBCUtilsObject != NULL)
-	  {
+void
+jq_close(Jconn * conn)
+{
+	jclass		JDBCUtilsClass;
+	jmethodID	id_cancel;
+	MemoryContext ccxt = CurrentMemoryContext;
+
+	/* JDBCUtils object has been cleaned, do nothing */
+	if (jvm == NULL || Jenv == NULL)
+		return;
+
+	PG_TRY();
+	{
 		JDBCUtilsClass = (*Jenv)->FindClass(Jenv, "JDBCUtils");
 		if (JDBCUtilsClass == NULL)
 		{
 			elog(ERROR, "JDBCUtilsClass is NULL");
 		}
-		idClose = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "closeConnection", "()V");
-		if (idClose == NULL)
+		id_cancel = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "closeConnection",
+											"()V");
+		if (id_cancel == NULL)
 		{
-			ereport(WARNING, (errmsg("Failed to find the JDBCUtils.closeConnection method")));
+			elog(ERROR, "id_cancel is NULL");
 		}
 		jq_exception_clear();
-		(*Jenv)->CallObjectMethod(Jenv, java_call, idClose);
+		(*Jenv)->CallObjectMethod(Jenv, conn->JDBCUtilsObject, id_cancel);
 		jq_get_exception("JDBCUtils.closeConnection");
-	  }
-	} else {
-	  ereport(DEBUG3, (errmsg("In jq_finish")));
 	}
-	if(jvm != NULL) {
-	  jdbc_detach_jvm();
+	PG_CATCH();
+	{
+		ErrorData  *edata;
+
+		/* Save error info */
+		MemoryContextSwitchTo(ccxt);
+		edata = CopyErrorData();
+		FlushErrorState();
+
+		/*
+		 * We are in Transaction abort callback, raise error here may making
+		 * the infinity loop.
+		 */
+		elog(WARNING, "jq_close failed: %s", edata->message);
 	}
-	conn = NULL;
-	return;
+	PG_END_TRY();
 }
 
 int

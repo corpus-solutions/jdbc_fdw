@@ -71,7 +71,8 @@ extern Jconn * jq_connect_db_params(const ForeignServer * server, const UserMapp
 extern ConnStatusType jq_status(const Jconn * conn);
 extern char *jq_error_message(const Jconn * conn);
 extern int	jq_connection_used_password(const Jconn * conn);
-extern void jq_finish(Jconn * conn);
+extern void jq_finish();
+extern void jq_close(Jconn * conn);
 extern int	jq_server_version(const Jconn * conn);
 extern char *jq_result_error_field(const Jresult * res, int fieldcode);
 extern PGTransactionStatusType jq_transaction_status(const Jconn * conn);
@@ -82,4 +83,5 @@ extern void *jq_bind_sql_var(Jconn * conn, Oid type, int attnum, Datum value, bo
 extern Datum jdbc_convert_to_pg(Oid pgtyp, int pgtypmod, char *value);
 extern List * jq_get_schema_info(Jconn * conn, char *remote_schema);
 extern void jdbc_jvm_init(const ForeignServer * server, const UserMapping * user);
+extern void jq_cancel(Jconn * conn);
 #endif							/* JQ_H */
