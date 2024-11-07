@@ -1136,11 +1136,12 @@ jq_connect_db_params(const ForeignServer * server, const UserMapping * user,
 		const char *pvalue = values[i];
 		if (strcmp(keywords[i], "username") == 0)
 		{
-			opts.username = values[i];
+			opts.username = pvalue;
+			ereport(DEBUG3, (errmsg("Username %s in jq_connect_db_params", opts.username)));
 		}
 		if (strcmp(keywords[i], "password") == 0)
 		{
-			opts.password = values[i];
+			opts.password = pvalue;
 		}
 		if (pvalue == NULL && pvalue[0] == '\0')
 		{
