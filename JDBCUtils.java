@@ -81,7 +81,10 @@ public class JDBCUtils {
       jdbcProperties.put("password", password);
       /* get connection from cache */
       if (ConnectionHash.containsKey(key)) {
-        conn = ConnectionHash.get(key);
+        Connection oldConn = ConnectionHash.get(key);
+        if(oldConn.isValid(1)) {
+          conn = oldConn;
+        }
       }
       if (conn == null) {
         conn = jdbcDriver.connect(url, jdbcProperties);

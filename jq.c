@@ -1137,8 +1137,28 @@ jq_connection_used_password(const Jconn * conn)
 void
 jq_finish(Jconn * conn)
 {
+	jmethodID	idClose;
+    jclass		JDBCUtilsClass;
+
 	if(conn != NULL) {
 	  ereport(DEBUG3, (errmsg("In jq_finish for conn=%p", conn)));
+	  /* Our object of the JDBCUtils class is on the connection */
+	  if (conn->JDBCUtilsObject != NULL)
+	  {
+		JDBCUtilsClass = (*Jenv)->FindClass(Jenv, "JDBCUtils");
+		if (JDBCUtilsClass == NULL)
+		{
+			elog(ERROR, "JDBCUtilsClass is NULL");
+		}
+		idClose = (*Jenv)->GetMethodID(Jenv, JDBCUtilsClass, "closeConnection", "()V");
+		if (idClose == NULL)
+		{
+			ereport(WARNING, (errmsg("Failed to find the JDBCUtils.closeConnection method")));
+		}
+		jq_exception_clear();
+		(*Jenv)->CallObjectMethod(Jenv, java_call, idClose);
+		jq_get_exception("JDBCUtils.closeConnection");
+	  }
 	} else {
 	  ereport(DEBUG3, (errmsg("In jq_finish")));
 	}

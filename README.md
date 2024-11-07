@@ -363,6 +363,10 @@ Useful links
  - https://wiki.postgresql.org/wiki/Fdw
  - https://pgxn.org/tag/fdw/
  
+### Debugging
+
+ - For debug, set verbose message in sql: `set client_min_messages=debug3;`
+
 License
 -------
 Copyright (c) 2021, TOSHIBA CORPORATION
