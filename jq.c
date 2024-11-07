@@ -657,7 +657,7 @@ jq_prepare_id(Jconn * conn, const char *query, int *resultSetID)
 
 	res = (Jresult *) palloc0(sizeof(Jresult));
 	*res = PGRES_FATAL_ERROR;
-	ereport(DEBUG3, (errmsg("In jq_exec_id(%p): %s", conn, query)));
+	ereport(DEBUG3, (errmsg("In jq_prepare_id(%p): %s", conn, query)));
 
 	jq_get_JDBCUtils(conn, &JDBCUtilsClass, &JDBCUtilsObject);
 
